@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Anonymous</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root {
+  --bg: #0a0a0c;
+  --surface: #141416;
+  --surface2: #1a1a1e;
+  --border: rgba(255,255,255,0.06);
+  --accent: #5ec4c0;
+  --accent-dim: rgba(94,196,192,0.14);
+  --text: #f4f4f5;
+  --text2: #a1a1aa;
+  --muted: #71717a;
+  --danger: #f87171;
+  --danger-dim: rgba(248,113,113,0.12);
+  --success: #4ade80;
+  --radius: 20px;
+  --radius-sm: 14px;
+}
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,sans-serif; }
+body { background:var(--bg); color:var(--text); min-height:100vh; padding-bottom:88px; overflow-x:hidden; }
+body, .num { font-variant-numeric:lining-nums; font-feature-settings:"tnum" 1; }
+.num { direction:ltr; unicode-bidi:isolate; font-family:"SF Mono",Menlo,monospace !important; }
+
+/* Top */
+.top { display:flex; align-items:center; justify-content:space-between; padding:12px 18px; position:sticky; top:0; z-index:60; background:rgba(10,10,12,0.85); backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px); border-bottom:1px solid var(--border); }
+.icon-btn { width:36px; height:36px; border-radius:50%; background:var(--surface2); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; color:var(--text); }
+.icon-btn svg { width:18px; height:18px; fill:currentColor; }
+.lang { display:flex; background:var(--surface2); border-radius:20px; padding:3px; border:1px solid var(--border); }
+.lang button { border:none; background:transparent; color:var(--muted); font-size:11px; font-weight:600; padding:6px 12px; border-radius:16px; }
+.lang button.on { background:var(--accent); color:#0a0a0c; }
+
+/* Views */
+.view { display:none; padding:16px; animation:fade .25s ease; }
+.view.on { display:block; }
+@keyframes fade { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:none} }
+
+/* Hero soft */
+.hero { background:linear-gradient(165deg,#16161a 0%,#101014 100%); border-radius:24px; padding:28px 22px; border:1px solid var(--border); margin-bottom:20px; position:relative; overflow:hidden; }
+.hero::after { content:""; position:absolute; top:-40%; left:-20%; width:200px; height:200px; background:radial-gradient(circle,rgba(94,196,192,0.12),transparent 65%); pointer-events:none; }
+.hero h1 { font-size:22px; font-weight:700; letter-spacing:-0.3px; margin-bottom:8px; }
+.hero p { font-size:13.5px; color:var(--text2); line-height:1.55; max-width:92%; }
+.pill { display:inline-flex; align-items:center; gap:6px; font-size:11px; font-weight:600; color:var(--accent); background:var(--accent-dim); padding:5px 12px; border-radius:20px; margin-bottom:14px; }
+.pill i { width:6px; height:6px; border-radius:50%; background:var(--accent); animation:pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+/* Cards */
+.card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:18px; margin-bottom:12px; }
+.card h3 { font-size:14px; font-weight:600; margin-bottom:6px; }
+.card p { font-size:12.5px; color:var(--muted); line-height:1.5; }
+
+/* Soft iOS-like compose full panel */
+.compose-screen { min-height:calc(100vh - 120px); display:flex; flex-direction:column; }
+.compose-screen .label { font-size:12px; color:var(--muted); margin-bottom:8px; font-weight:500; }
+.compose-area { flex:1; background:var(--surface); border-radius:24px; border:1px solid var(--border); padding:18px; display:flex; flex-direction:column; box-shadow:0 8px 40px rgba(0,0,0,0.35); }
+.compose-area textarea { flex:1; min-height:160px; width:100%; background:transparent; border:none; outline:none; color:var(--text); font-size:16px; line-height:1.6; resize:none; }
+.compose-area textarea::placeholder { color:var(--muted); }
+.compose-tools { display:flex; gap:10px; margin-top:14px; padding-top:14px; border-top:1px solid var(--border); flex-wrap:wrap; }
+.tool { width:44px; height:44px; border-radius:14px; background:var(--surface2); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; color:var(--text2); }
+.tool svg { width:20px; height:20px; fill:currentColor; }
+.tool input { display:none; }
+.send-bar { margin-top:16px; }
+.btn { width:100%; padding:16px; border:none; border-radius:16px; font-size:15px; font-weight:600; cursor:pointer; }
+.btn-main { background:var(--accent); color:#0a0a0c; box-shadow:0 6px 24px rgba(94,196,192,0.25); }
+.btn-soft { background:var(--surface2); color:var(--text); border:1px solid var(--border); }
+.btn-danger { background:var(--danger-dim); color:var(--danger); }
+.btn-row { display:flex; gap:10px; }
+.btn-row .btn { flex:1; }
+
+/* Message list professional */
+.msg-item { background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:14px 16px; margin-bottom:10px; }
+.msg-head { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; gap:10px; }
+.msg-id { font-size:11px; color:var(--accent); font-weight:600; }
+.msg-time { font-size:11px; color:var(--muted); }
+.msg-body { font-size:14px; line-height:1.5; color:var(--text2); word-break:break-word; margin-bottom:12px; }
+.msg-actions { display:flex; gap:8px; flex-wrap:wrap; }
+.chip { padding:8px 14px; border-radius:12px; font-size:12px; font-weight:600; border:none; cursor:pointer; }
+.chip-edit { background:var(--accent-dim); color:var(--accent); }
+.chip-del { background:var(--danger-dim); color:var(--danger); }
+.chip-reply { background:rgba(255,255,255,0.06); color:var(--text2); }
+.chip-block { background:var(--danger-dim); color:var(--danger); }
+
+/* Receiver rich */
+.stat-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px; }
+.stat { background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:16px; text-align:center; }
+.stat .n { font-size:22px; font-weight:700; color:var(--accent); margin-bottom:4px; }
+.stat .l { font-size:11px; color:var(--muted); }
+
+.field { margin-bottom:12px; }
+.field label { display:block; font-size:12px; color:var(--muted); margin-bottom:6px; }
+.field input, .field textarea { width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:14px; padding:12px 14px; color:var(--text); font-size:14px; outline:none; }
+.field textarea { min-height:80px; resize:none; }
+
+.nav { position:fixed; bottom:0; left:0; right:0; height:78px; background:rgba(10,10,12,0.92); backdrop-filter:blur(24px); border-top:1px solid var(--border); display:flex; justify-content:space-around; align-items:center; padding-bottom:12px; z-index:50; }
+.nav button { background:none; border:none; color:var(--muted); font-size:10px; display:flex; flex-direction:column; align-items:center; gap:4px; font-weight:500; }
+.nav button.on { color:var(--accent); }
+.nav svg { width:22px; height:22px; fill:currentColor; }
+
+.hidden { display:none !important; }
+.empty { text-align:center; padding:48px 20px; color:var(--muted); }
+.empty h4 { color:var(--text2); margin-bottom:6px; font-size:15px; }
+.empty p { font-size:13px; line-height:1.5; }
+
+/* Music control */
+.music-fab { position:fixed; bottom:90px; left:16px; z-index:45; width:44px; height:44px; border-radius:50%; background:var(--surface); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; color:var(--accent); box-shadow:0 4px 20px rgba(0,0,0,0.4); }
+.music-fab svg { width:18px; height:18px; fill:currentColor; }
+.music-fab.off { color:var(--muted); }
+
+.back { display:inline-flex; align-items:center; gap:6px; color:var(--accent); font-size:13px; font-weight:600; margin-bottom:16px; background:none; border:none; cursor:pointer; }
+</style>
+</head>
+<body>
+
+<audio id="ambient" loop preload="auto">
+  <source src="https://cdn.pixabay.com/download/audio/2022/03/24/audio_c8c0aadec3.mp3?filename=soft-ambient-112199.mp3" type="audio/mpeg">
+</audio>
+
+<div class="top">
+  <div class="icon-btn" onclick="Telegram.WebApp.close()">
+    <svg viewBox="0 0 24 24"><path d="M18.3 5.71L12 12.01 5.7 5.7 4.29 7.11 10.59 13.4 4.29 19.7 5.7 21.11 12 14.81 18.3 21.11 19.71 19.7 13.41 13.4 19.71 7.11z"/></svg>
+  </div>
+  <div class="lang">
+    <button class="on" id="b-fa" onclick="setLang('fa')">FA</button>
+    <button id="b-en" onclick="setLang('en')">EN</button>
+  </div>
+</div>
+
+<button class="music-fab" id="musicBtn" onclick="toggleMusic()" title="Music">
+  <svg id="musicIcon" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+</button>
+
+<!-- ===== HOME ===== -->
+<div id="view-home" class="view on">
+  <div id="role-user">
+    <div class="hero">
+      <div class="pill"><i></i> <span data-i18n="online">آنلاین</span></div>
+      <h1 data-i18n="hero">پیام ناشناس امن</h1>
+      <p data-i18n="hero_sub">هویت شما مخفی می‌ماند. پیام مستقیماً به گیرنده مشخص ارسال می‌شود.</p>
+    </div>
+    <div class="card">
+      <h3 data-i18n="start_send">شروع ارسال</h3>
+      <p data-i18n="start_send_desc">محیط نرم و جدا برای نوشتن پیام، پیوست فایل و ارسال</p>
+      <button class="btn btn-main" style="margin-top:14px" onclick="showView('compose')" data-i18n="open_compose">باز کردن صفحه ارسال</button>
+    </div>
+    <div class="card">
+      <h3 data-i18n="quick">دسترسی سریع</h3>
+      <div class="btn-row" style="margin-top:12px">
+        <button class="btn btn-soft" onclick="showView('messages')" data-i18n="my_msgs">پیام‌های من</button>
+        <button class="btn btn-soft" onclick="showView('security')" data-i18n="security">امنیت</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="role-receiver" class="hidden">
+    <div class="hero">
+      <div class="pill"><i></i> گیرنده</div>
+      <h1>پنل گیرنده</h1>
+      <p>مدیریت پیام‌ها، قفل ارسال، بلاک و پاسخ حرفه‌ای</p>
+    </div>
+    <div class="stat-row">
+      <div class="stat"><div class="n num" id="st-msgs">—</div><div class="l">پیام‌ها</div></div>
+      <div class="stat"><div class="n num" id="st-blocks">—</div><div class="l">بلاک‌ها</div></div>
+    </div>
+    <div class="card">
+      <h3>قفل ارسال</h3>
+      <p>با فعال‌سازی، هیچ کاربر جدیدی نمی‌تواند پیام بفرستد.</p>
+      <button class="btn btn-danger" style="margin-top:12px" onclick="doAction('toggle_lock')">تغییر وضعیت قفل</button>
+    </div>
+    <div class="card">
+      <h3>پیام‌های دریافتی</h3>
+      <p>هر پیام در چت ربات با <b>آیدی، نام کامل و یوزرنیم</b> فرستنده می‌آید. زیر هر پیام دکمه‌های بلاک، حذف و پاسخ قرار دارد.</p>
+      <button class="btn btn-soft" style="margin-top:12px" onclick="Telegram.WebApp.close()">رفتن به چت ربات</button>
+    </div>
+    <div class="card">
+      <h3>پاسخ به پیام</h3>
+      <p>شناسه پیام و متن پاسخ را وارد کنید. پاسخ برای فرستنده ارسال می‌شود.</p>
+      <div class="field"><label>شناسه پیام</label><input id="reply-id" class="num" type="number" placeholder="مثلا 12"></div>
+      <div class="field"><label>متن پاسخ</label><textarea id="reply-text" placeholder="پاسخ شما..."></textarea></div>
+      <button class="btn btn-main" onclick="sendReply()">ارسال پاسخ</button>
+    </div>
+    <div class="card">
+      <h3>بلاک کاربر</h3>
+      <p>آیدی عددی کاربر را وارد کنید تا دیگر نتواند پیام بفرستد.</p>
+      <div class="field"><label>آیدی کاربر</label><input id="block-id" class="num" type="number" placeholder="آیدی تلگرام"></div>
+      <button class="btn btn-danger" onclick="blockUser()">بلاک کردن</button>
+    </div>
+    <div class="card">
+      <h3>حذف پیام</h3>
+      <div class="field"><label>شناسه پیام</label><input id="recv-del" class="num" type="number"></div>
+      <button class="btn btn-danger" onclick="deleteMsg('recv-del')">حذف</button>
+    </div>
+  </div>
+
+  <div id="role-admin" class="hidden">
+    <div class="hero">
+      <div class="pill"><i></i> مدیر</div>
+      <h1>پنل مدیریت</h1>
+      <p>کنترل کامل سیستم، آمار و تنظیمات</p>
+    </div>
+    <div class="card">
+      <div class="btn-row">
+        <button class="btn btn-soft" onclick="doAction('admin_stats')">آمار</button>
+        <button class="btn btn-danger" onclick="doAction('toggle_lock')">قفل ارسال</button>
+      </div>
+    </div>
+    <div class="card">
+      <h3>نام ربات</h3>
+      <div class="field"><input id="set-name" placeholder="نام جدید"></div>
+      <button class="btn btn-main" onclick="saveSet('bot_name','set-name')">ذخیره</button>
+    </div>
+    <div class="card">
+      <h3>متن خوش‌آمد</h3>
+      <div class="field"><input id="set-welcome" placeholder="متن جدید"></div>
+      <button class="btn btn-main" onclick="saveSet('welcome_text','set-welcome')">ذخیره</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== COMPOSE (جدا و نرم) ===== -->
+<div id="view-compose" class="view">
+  <button class="back" onclick="showView('home')">← بازگشت</button>
+  <div class="compose-screen">
+    <div class="label" data-i18n="compose_label">محیط ارسال پیام</div>
+    <div class="compose-area">
+      <textarea id="msg" placeholder="پیام خود را بنویسید..."></textarea>
+      <div class="compose-tools">
+        <label class="tool" title="عکس">
+          <svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+          <input type="file" id="file-photo" accept="image/*" onchange="onFile('photo',this)">
+        </label>
+        <label class="tool" title="فایل">
+          <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/></svg>
+          <input type="file" id="file-doc" onchange="onFile('doc',this)">
+        </label>
+        <label class="tool" title="صوت">
+          <svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+          <input type="file" id="file-audio" accept="audio/*" onchange="onFile('audio',this)">
+        </label>
+        <span id="file-name" style="font-size:11px;color:var(--muted);align-self:center;"></span>
+      </div>
+    </div>
+    <div class="send-bar">
+      <button class="btn btn-main" onclick="sendMsg()" data-i18n="send">ارسال پیام ناشناس</button>
+      <p style="font-size:11px;color:var(--muted);margin-top:10px;text-align:center" data-i18n="media_note">برای ارسال عکس/فایل/موسیقی، پس از ارسال متن می‌توانید همان رسانه را در چت ربات هم بفرستید تا به گیرنده برسد.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MESSAGES ===== -->
+<div id="view-messages" class="view">
+  <button class="back" onclick="showView('home')">← بازگشت</button>
+  <div class="label" data-i18n="my_sent">پیام‌های ارسال‌شده</div>
+  <div id="msg-list"></div>
+  <div id="msg-empty" class="empty">
+    <h4 data-i18n="no_msg">هنوز پیامی نیست</h4>
+    <p data-i18n="no_msg_desc">پس از ارسال، اینجا با دکمه ویرایش و حذف نمایش داده می‌شود.</p>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <h3 data-i18n="del_by_id">حذف با شناسه</h3>
+    <div class="field"><input id="del-input" class="num" type="number" placeholder="شناسه پیام از ربات"></div>
+    <button class="btn btn-danger" onclick="deleteMsg('del-input')" data-i18n="delete">حذف پیام</button>
+  </div>
+  <div class="card">
+    <h3 data-i18n="edit_by_id">ویرایش با شناسه</h3>
+    <div class="field"><input id="edit-id" class="num" type="number" placeholder="شناسه"></div>
+    <div class="field"><textarea id="edit-text" placeholder="متن جدید"></textarea></div>
+    <button class="btn btn-main" onclick="editMsg()" data-i18n="edit">ویرایش</button>
+  </div>
+</div>
+
+<!-- ===== SECURITY ===== -->
+<div id="view-security" class="view">
+  <button class="back" onclick="showView('home')">← بازگشت</button>
+  <div class="card">
+    <h3 data-i18n="privacy">حریم خصوصی</h3>
+    <p data-i18n="privacy_desc">گیرنده آیدی و نام شما را می‌بیند (برای مدیریت)، اما در ظاهر پیام برای دیگران ناشناس است. شما می‌توانید تا ۲ دقیقه حذف/ویرایش کنید.</p>
+  </div>
+  <div class="card">
+    <h3 data-i18n="rules">قوانین</h3>
+    <p data-i18n="rules_desc">محتوای توهین‌آمیز یا غیرقانونی ممنوع است و منجر به بلاک می‌شود.</p>
+  </div>
+</div>
+
+<nav class="nav">
+  <button class="on" id="n-home" onclick="showView('home')">
+    <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+    <span data-i18n="nav_home">خانه</span>
+  </button>
+  <button id="n-compose" onclick="showView('compose')">
+    <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+    <span data-i18n="nav_send">ارسال</span>
+  </button>
+  <button id="n-messages" onclick="showView('messages')">
+    <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+    <span data-i18n="nav_msg">پیام‌ها</span>
+  </button>
+  <button id="n-security" onclick="showView('security')">
+    <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
+    <span data-i18n="nav_sec">امنیت</span>
+  </button>
+</nav>
+
+<script>
+const tg = window.Telegram.WebApp;
+tg.ready(); tg.expand();
+tg.setHeaderColor('#0a0a0c'); tg.setBackgroundColor('#0a0a0c');
+
+const role = new URLSearchParams(location.search).get('role') || 'user';
+if (role === 'receiver') {
+  document.getElementById('role-user').classList.add('hidden');
+  document.getElementById('role-receiver').classList.remove('hidden');
+} else if (role === 'admin') {
+  document.getElementById('role-user').classList.add('hidden');
+  document.getElementById('role-admin').classList.remove('hidden');
+}
+
+const audio = document.getElementById('ambient');
+audio.volume = 0.18;
+let musicOn = false;
+function toggleMusic() {
+  if (musicOn) { audio.pause(); musicOn = false; document.getElementById('musicBtn').classList.add('off'); }
+  else { audio.play().catch(()=>{}); musicOn = true; document.getElementById('musicBtn').classList.remove('off'); }
+}
+// تلاش برای پخش ملایم هنگام ورود (ممکن است مرورگر بلاک کند تا تعامل کاربر)
+setTimeout(() => { audio.play().then(()=>{ musicOn=true; }).catch(()=>{ document.getElementById('musicBtn').classList.add('off'); }); }, 600);
+
+function showView(name) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('on'));
+  document.getElementById('view-' + name).classList.add('on');
+  document.querySelectorAll('.nav button').forEach(b => b.classList.remove('on'));
+  const map = { home:'n-home', compose:'n-compose', messages:'n-messages', security:'n-security' };
+  if (map[name]) document.getElementById(map[name]).classList.add('on');
+  if (name === 'messages') renderMsgs();
+}
+
+let pendingFile = null;
+function onFile(type, input) {
+  if (input.files && input.files[0]) {
+    pendingFile = { type, name: input.files[0].name };
+    document.getElementById('file-name').textContent = pendingFile.name;
+  }
+}
+
+function sendMsg() {
+  const text = document.getElementById('msg').value.trim();
+  if (!text && !pendingFile) {
+    tg.showAlert(lang==='fa'?'پیام یا فایل وارد کنید':'Enter message or file');
+    return;
+  }
+  const payload = { action: 'send_text', text: text || (pendingFile ? ('[پیوست: '+pendingFile.name+']') : '') };
+  if (pendingFile) payload.file_hint = pendingFile.name;
+  // ذخیره محلی
+  const list = JSON.parse(localStorage.getItem('msgs')||'[]');
+  list.unshift({ id: 'local-'+Date.now(), text: text || pendingFile?.name, time: new Date().toLocaleString(), local: true });
+  localStorage.setItem('msgs', JSON.stringify(list.slice(0,40)));
+  tg.sendData(JSON.stringify(payload));
+  document.getElementById('msg').value = '';
+  pendingFile = null;
+  document.getElementById('file-name').textContent = '';
+}
+
+function deleteMsg(inputId) {
+  const id = document.getElementById(inputId).value.trim();
+  if (!id) { tg.showAlert(lang==='fa'?'شناسه را وارد کنید':'Enter ID'); return; }
+  tg.sendData(JSON.stringify({ action: 'delete_msg', msg_id: parseInt(id) }));
+}
+
+function editMsg() {
+  const id = document.getElementById('edit-id').value.trim();
+  const text = document.getElementById('edit-text').value.trim();
+  if (!id || !text) { tg.showAlert(lang==='fa'?'شناسه و متن لازم است':'ID and text required'); return; }
+  tg.sendData(JSON.stringify({ action: 'edit_msg', msg_id: parseInt(id), text }));
+}
+
+function sendReply() {
+  const id = document.getElementById('reply-id').value.trim();
+  const text = document.getElementById('reply-text').value.trim();
+  if (!id || !text) { tg.showAlert('شناسه و پاسخ لازم است'); return; }
+  tg.sendData(JSON.stringify({ action: 'reply_msg', msg_id: parseInt(id), text }));
+}
+
+function blockUser() {
+  const id = document.getElementById('block-id').value.trim();
+  if (!id) { tg.showAlert('آیدی را وارد کنید'); return; }
+  tg.sendData(JSON.stringify({ action: 'block_user', user_id: parseInt(id) }));
+}
+
+function doAction(a) { tg.sendData(JSON.stringify({ action: a })); }
+function saveSet(key, id) {
+  const v = document.getElementById(id).value.trim();
+  if (!v) return;
+  tg.sendData(JSON.stringify({ action: 'set_setting', key, value: v }));
+}
+
+function renderMsgs() {
+  const list = JSON.parse(localStorage.getItem('msgs')||'[]');
+  const box = document.getElementById('msg-list');
+  const empty = document.getElementById('msg-empty');
+  if (!list.length) { box.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+  box.innerHTML = list.map(m => `
+    <div class="msg-item">
+      <div class="msg-head">
+        <span class="msg-id">${m.id}</span>
+        <span class="msg-time">${m.time}</span>
+      </div>
+      <div class="msg-body">${esc(m.text)}</div>
+      <div class="msg-actions">
+        <button class="chip chip-edit" onclick="fillEdit('${m.id}')">ویرایش</button>
+        <button class="chip chip-del" onclick="quickDel('${m.id}')">حذف</button>
+      </div>
+    </div>
+  `).join('');
+}
+function fillEdit(id) {
+  const num = String(id).replace(/\D/g,'');
+  if (num) document.getElementById('edit-id').value = num;
+  showView('messages');
+  document.getElementById('edit-text').focus();
+}
+function quickDel(id) {
+  const num = String(id).replace(/\D/g,'');
+  if (num) {
+    document.getElementById('del-input').value = num;
+    deleteMsg('del-input');
+  }
+}
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+const T = {
+  fa: { online:'آنلاین', hero:'پیام ناشناس امن', hero_sub:'هویت شما مخفی می‌ماند. پیام مستقیماً به گیرنده مشخص ارسال می‌شود.', start_send:'شروع ارسال', start_send_desc:'محیط نرم و جدا برای نوشتن پیام، پیوست فایل و ارسال', open_compose:'باز کردن صفحه ارسال', quick:'دسترسی سریع', my_msgs:'پیام‌های من', security:'امنیت', compose_label:'محیط ارسال پیام', send:'ارسال پیام ناشناس', media_note:'برای ارسال عکس/فایل/موسیقی، پس از ارسال متن می‌توانید همان رسانه را در چت ربات هم بفرستید تا به گیرنده برسد.', my_sent:'پیام‌های ارسال‌شده', no_msg:'هنوز پیامی نیست', no_msg_desc:'پس از ارسال، اینجا با دکمه ویرایش و حذف نمایش داده می‌شود.', del_by_id:'حذف با شناسه', delete:'حذف پیام', edit_by_id:'ویرایش با شناسه', edit:'ویرایش', privacy:'حریم خصوصی', privacy_desc:'گیرنده آیدی و نام شما را می‌بیند (برای مدیریت). شما تا ۲ دقیقه حذف/ویرایش دارید.', rules:'قوانین', rules_desc:'محتوای توهین‌آمیز یا غیرقانونی ممنوع است و منجر به بلاک می‌شود.', nav_home:'خانه', nav_send:'ارسال', nav_msg:'پیام‌ها', nav_sec:'امنیت' },
+  en: { online:'Online', hero:'Secure Anonymous Message', hero_sub:'Your identity stays hidden. Message goes to the designated receiver.', start_send:'Start sending', start_send_desc:'Soft separate space to write, attach and send', open_compose:'Open compose', quick:'Quick access', my_msgs:'My messages', security:'Security', compose_label:'Compose', send:'Send anonymous message', media_note:'For photo/file/music, you can also send the media in the bot chat after text.', my_sent:'Sent messages', no_msg:'No messages yet', no_msg_desc:'After sending, edit and delete appear here.', del_by_id:'Delete by ID', delete:'Delete', edit_by_id:'Edit by ID', edit:'Edit', privacy:'Privacy', privacy_desc:'Receiver sees your ID and name for moderation. You can edit/delete within 2 minutes.', rules:'Rules', rules_desc:'Offensive or illegal content is banned.', nav_home:'Home', nav_send:'Send', nav_msg:'Messages', nav_sec:'Security' }
+};
+let lang = 'fa';
+function setLang(l) {
+  lang = l;
+  document.documentElement.lang = l;
+  document.documentElement.dir = l==='fa'?'rtl':'ltr';
+  document.getElementById('b-fa').classList.toggle('on', l==='fa');
+  document.getElementById('b-en').classList.toggle('on', l==='en');
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const k = el.getAttribute('data-i18n');
+    if (T[l][k]) el.textContent = T[l][k];
+  });
+}
+setLang('fa');
+</script>
+</body>
+</html>
